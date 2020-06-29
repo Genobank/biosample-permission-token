@@ -1,0 +1,86 @@
+{
+  "name": "nft-recursive-claims",
+  "version": "1.0.0a",
+  "description": "Non-fungible token example for tracking recursive licensing",
+  "scripts": {
+    "compile": "specron compile",
+    "sandbox": "specron sandbox",
+    "prepare": "specron compile",
+    "test": "specron compile && specron test",
+    "solhint": "solhint src/**/*.sol"
+  },
+  "specron": {
+    "compiler": {
+      "build": "./build",
+      "match": [
+        "./src/**/*.sol"
+      ]
+    },
+    "flattener": {
+      "build": "./build",
+      "match": [
+        "./src/**/*.sol"
+      ],
+      "severities": [
+        "error",
+        "warning"
+      ]
+    },
+    "test": {
+      "match": [
+        "./src/**/*.test.*"
+      ]
+    },
+    "require": [
+      "ts-node/register"
+    ]
+  },
+  "author": "William Entriken",
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fulldecent/recursive-license-token.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fulldecent/recursive-license-token/issues"
+  },
+  "homepage": "https://github.com/fulldecent/recursive-license-token#readme",
+  "keywords": [
+    "ethereum",
+    "blockchain",
+    "eth",
+    "contract",
+    "contracts",
+    "smart",
+    "smart-contract",
+    "smart-contracts",
+    "token",
+    "tokens",
+    "nft",
+    "nfts",
+    "non-fungible",
+    "non-fungibles",
+    "eip",
+    "erc",
+    "erc721",
+    "erc-721",
+    "deed",
+    "standard",
+    "licensing",
+    "license"
+  ],
+  "devDependencies": {
+    "@specron/cli": "0.15.1",
+    "@specron/flattener": "0.15.1",
+    "@specron/spec": "0.15.1",
+    "@types/node": "13.7.0",
+    "solc": "0.6.2",
+    "solhint": "2.3.0",
+    "ts-node": "8.6.2",
+    "typescript": "3.7.5",
+    "web3": "1.2.5-rc.0"
+  },
+  "dependencies": {
+    "@0xcert/ethereum-erc721": "^2.2.0"
+  }
+}

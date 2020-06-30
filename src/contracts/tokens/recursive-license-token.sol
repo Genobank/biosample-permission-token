@@ -9,6 +9,13 @@ import "../../../node_modules/@0xcert/ethereum-erc721/src/contracts/tokens/nf-to
 contract RecursiveLicenseToken is
   NFTokenMetadata
 {
+  /**
+   * @dev MUST emit when the URI is updated for a token ID.
+   * URIs are defined in RFC 3986.
+   * Inspired by ERC-1155
+   */
+  event URI(string _value, uint256 indexed _tokenId);
+
 
   /**
    * @dev Contract constructor.
@@ -40,6 +47,7 @@ contract RecursiveLicenseToken is
     require(address(_tokenId) == msg.sender, "TokenIds are namespaced to licensors");
     NFToken._mint(msg.sender, _tokenId);
     NFTokenMetadata._setTokenUri(_tokenId, _permission);
+    emit URI(_permission, _tokenId);
   }
 
   /**
@@ -55,6 +63,7 @@ contract RecursiveLicenseToken is
   {
     require(address(_tokenId) == msg.sender, "TokenIds are namespaced to licensors");
     NFTokenMetadata._setTokenUri(_tokenId, _uri);
+    emit URI(_uri, _tokenId);
   }  
 
 }

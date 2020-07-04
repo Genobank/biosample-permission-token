@@ -16,7 +16,6 @@ contract RecursiveLicenseToken is
    */
   event URI(string _value, uint256 indexed _tokenId);
 
-
   /**
    * @dev Contract constructor.
    * @param _name A descriptive name for a collection of NFTs.
@@ -61,9 +60,10 @@ contract RecursiveLicenseToken is
   )
     external
   {
-    require(address(_tokenId) == msg.sender, "TokenIds are namespaced to licensors");
+    address tokenOwner = idToOwner[_tokenId];
+    require(tokenOwner == msg.sender, NOT_OWNER);
     NFTokenMetadata._setTokenUri(_tokenId, _uri);
     emit URI(_uri, _tokenId);
-  }  
+  }
 
 }

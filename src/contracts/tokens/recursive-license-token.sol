@@ -60,8 +60,7 @@ contract RecursiveLicenseToken is
   )
     external
   {
-    address tokenOwner = idToOwner[_tokenId];
-    require(tokenOwner == msg.sender, NOT_OWNER);
+    require(address(_tokenId) == msg.sender, "TokenIds are namespaced to licensors");
     NFTokenMetadata._setTokenUri(_tokenId, _uri);
     emit URI(_uri, _tokenId);
   }

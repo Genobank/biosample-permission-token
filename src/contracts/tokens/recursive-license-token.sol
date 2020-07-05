@@ -43,7 +43,7 @@ contract RecursiveLicenseToken is
   )
     external
   {
-    require(address(_tokenId) == msg.sender, "TokenIds are namespaced to licensors");
+    require(address(_tokenId) == msg.sender, "TokenIds are namespaced to licensees");
     NFToken._mint(msg.sender, _tokenId);
     NFTokenMetadata._setTokenUri(_tokenId, _permission);
     emit URI(_permission, _tokenId);
@@ -60,7 +60,7 @@ contract RecursiveLicenseToken is
   )
     external
   {
-    require(address(_tokenId) == msg.sender, "TokenIds are namespaced to licensors");
+    require(address(_tokenId) == msg.sender, "TokenIds are namespaced to licensees");
     NFTokenMetadata._setTokenUri(_tokenId, _uri);
     emit URI(_uri, _tokenId);
   }

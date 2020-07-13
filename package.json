@@ -1,7 +1,7 @@
 {
-  "name": "nft-recursive-claims",
+  "name": "biosample-permission-token",
   "version": "1.0.0a",
-  "description": "Non-fungible token example for tracking recursive licensing",
+  "description": "Non-fungible token example for tracking biosample permissions",
   "scripts": {
     "compile": "specron compile",
     "sandbox": "specron sandbox",
@@ -39,12 +39,12 @@
   "license": "SEE LICENSE IN LICENSE",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fulldecent/recursive-license-token.git"
+    "url": "git+https://github.com/fulldecent/biosample-permission-token.git"
   },
   "bugs": {
-    "url": "https://github.com/fulldecent/recursive-license-token/issues"
+    "url": "https://github.com/fulldecent/biosample-permission-token/issues"
   },
-  "homepage": "https://github.com/fulldecent/recursive-license-token#readme",
+  "homepage": "https://github.com/fulldecent/biosample-permission-token#readme",
   "keywords": [
     "ethereum",
     "blockchain",

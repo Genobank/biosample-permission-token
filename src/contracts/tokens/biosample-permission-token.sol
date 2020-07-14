@@ -6,7 +6,7 @@ import "../../../node_modules/@0xcert/ethereum-erc721/src/contracts/tokens/nf-to
 /**
  * @dev This is an example contract implementation of NFToken with metadata extension.
  */
-contract RecursiveLicenseToken is
+contract BiosamplePermissionToken is
   NFTokenMetadata
 {
   /**
@@ -43,7 +43,7 @@ contract RecursiveLicenseToken is
   )
     external
   {
-    require(address(_tokenId) == msg.sender, "TokenIds are namespaced to licensees");
+    require(address(_tokenId) == msg.sender, "TokenIds are namespaced to permitters");
     NFToken._mint(msg.sender, _tokenId);
     NFTokenMetadata._setTokenUri(_tokenId, _permission);
     emit URI(_permission, _tokenId);
@@ -60,7 +60,7 @@ contract RecursiveLicenseToken is
   )
     external
   {
-    require(address(_tokenId) == msg.sender, "TokenIds are namespaced to licensees");
+    require(address(_tokenId) == msg.sender, "TokenIds are namespaced to permitters");
     NFTokenMetadata._setTokenUri(_tokenId, _uri);
     emit URI(_uri, _tokenId);
   }

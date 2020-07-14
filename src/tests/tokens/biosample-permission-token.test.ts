@@ -11,9 +11,7 @@ interface Data {
   owner?: string;
   bob?: string;
   jane?: string;
-  sara?: string;
-  zeroAddress?: string;
-  id1?: string;
+  bobId1?: string;
   uri1?: string;
 }
 
@@ -30,20 +28,18 @@ spec.beforeEach(async (ctx) => {
   ctx.set('owner', accounts[0]);
   ctx.set('bob', accounts[1]);
   ctx.set('jane', accounts[2]);
-  ctx.set('sara', accounts[3]);
-  ctx.set('zeroAddress', '0x0000000000000000000000000000000000000000');
 });
 
 spec.beforeEach(async (ctx) => {
   const accounts = await ctx.web3.eth.getAccounts();
-  ctx.set('id1', "0x000000000000000000000000" + accounts[1].substring(2)); // For bob's permission test
+  ctx.set('bobId1', "0x000000000000000000000001" + accounts[1].substring(2)); // For bob's permission test
   ctx.set('uri1', 'http://0xcert.org/1');
 });
 
 spec.beforeEach(async (ctx) => {
   const nfToken = await ctx.deploy({ 
-    src: './build/recursive-license-token.json',
-    contract: 'RecursiveLicenseToken',
+    src: './build/biosample-permission-token.json',
+    contract: 'BiosamplePermissionToken',
     args: ['Foo','F']
   });
   ctx.set('nfToken', nfToken);
@@ -62,44 +58,40 @@ spec.test('correctly checks all the supported interfaces', async (ctx) => {
 spec.test('returns the correct issuer name', async (ctx) => {
   const nftoken = ctx.get('nfToken');
   const name = await nftoken.instance.methods.name().call();
-
   ctx.is(name, "Foo");
 });
 
 spec.test('returns the correct issuer symbol', async (ctx) => {
   const nftoken = ctx.get('nfToken');
   const symbol = await nftoken.instance.methods.symbol().call();
-
   ctx.is(symbol, "F");
 });
 
 spec.test('correctly mints a NFT', async (ctx) => {
   const nftoken = ctx.get('nfToken');
-  const owner = ctx.get('owner');
   const bob = ctx.get('bob');
-  const id1 = ctx.get('id1');
+  const bobId1 = ctx.get('bobId1');
   const uri1 = ctx.get('uri1');
 
-  const logs = await nftoken.instance.methods.mint(id1, uri1).send({ from: bob });
+  const logs = await nftoken.instance.methods.mint(bobId1, uri1).send({ from: bob });
   ctx.not(logs.events.Transfer, undefined);
-  const tokenURI = await nftoken.instance.methods.tokenURI(id1).call();
+  const tokenURI = await nftoken.instance.methods.tokenURI(bobId1).call();
   ctx.is(tokenURI, uri1);
 });
 
 spec.test('throws when person mints an unauthorized NFT ID', async (ctx) => {
   const nftoken = ctx.get('nfToken');
-  const owner = ctx.get('owner');
-  const bob = ctx.get('bob');
-  const id1 = ctx.get('id1');
+  const jane = ctx.get('jane');
+  const bobId1 = ctx.get('bobId1');
   const uri1 = ctx.get('uri1');
 
-  await ctx.reverts(() => nftoken.instance.methods.mint(id1, uri1).send({ from: owner }), 'TokenIds are namespaced to licensors');
+  await ctx.reverts(() => nftoken.instance.methods.mint(bobId1, uri1).send({ from: jane }), 'TokenIds are namespaced to permitters');
 });
 
 spec.test('throws when trying to get URI of invalid NFT ID', async (ctx) => {
   const nftoken = ctx.get('nfToken');
-  const id1 = ctx.get('id1');
+  const bobId1 = ctx.get('bobId1');
 
-  await ctx.reverts(() => nftoken.instance.methods.tokenURI(id1).call(), '003002');
+  await ctx.reverts(() => nftoken.instance.methods.tokenURI(bobId1).call(), '003002');
 });
   

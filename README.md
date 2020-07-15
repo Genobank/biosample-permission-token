@@ -4,6 +4,8 @@
 
 This is a proof-of-concept demonstration of how to use claims, encoded in non-fungible tokens, to establish a chain of trust for licensing and sublicensing agreements.
 
+This project is sponsored by GenoBank.io.
+
 ## Structure
 
 This smart contract is a thin wrapper on the reference ERC-721 implementation.

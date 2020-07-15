@@ -6,6 +6,8 @@ This is a proof-of-concept demonstration of how to use claims, encoded in non-fu
 
 This project is sponsored by GenoBank.io.
 
+See video explanation of the technology at: https://www.youtube.com/watch?v=su5eWYnRN24
+
 ## Structure
 
 This smart contract is a thin wrapper on the reference ERC-721 implementation.

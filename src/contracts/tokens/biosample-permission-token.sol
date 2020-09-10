@@ -31,6 +31,7 @@ contract BiosamplePermissionToken is
     nftSymbol = _symbol;
   }
 
+  /// TODO: fix description
   /**
    * @dev Mints a new NFT.
    * @param _to The address that will own the minted NFT.
@@ -63,6 +64,75 @@ contract BiosamplePermissionToken is
     require(address(_tokenId) == msg.sender, "TokenIds are namespaced to permitters");
     NFTokenMetadata._setTokenUri(_tokenId, _uri);
     emit URI(_uri, _tokenId);
+  }
+
+  
+  /// TODO: add description
+  function createWithSignature(
+    uint256 _tokenId,
+    string calldata _permission,
+    bytes32 _r,
+    bytes32 _s,
+    uint8 _v
+  )
+    external
+  {
+    bytes32 _claim = getCreateClaim(_tokenId, _permission);
+    require(
+      isValidSignature(
+        address(_tokenId),
+        _claim,
+        _r,
+        _s,
+        _v
+      ),
+      "Signature is not valid."
+    );
+    NFToken._mint(address(_tokenId), _tokenId);
+    NFTokenMetadata._setTokenUri(_tokenId, _permission);
+    emit URI(_permission, _tokenId);
+  }
+
+  /// TODO: add description
+  function isValidSignature(
+    address _signer,
+    bytes32 _claim,
+    bytes32 _r,
+    bytes32 _s,
+    uint8 _v
+  )
+    public
+    pure
+    returns (bool)
+  {
+    return _signer == ecrecover(
+        keccak256(
+          abi.encodePacked(
+            "\x19Ethereum Signed Message:\n32",
+            _claim
+          )
+        ),
+        _v,
+        _r,
+        _s
+      );
+  }
+
+  /// TODO: add description
+  function getCreateClaim(
+    uint256 _tokenId,
+    string memory _permission
+  )
+    public
+    pure
+    returns (bytes32)
+  {
+    return keccak256(
+      abi.encodePacked(
+        _tokenId,
+        _permission
+      )
+    );
   }
 
 }

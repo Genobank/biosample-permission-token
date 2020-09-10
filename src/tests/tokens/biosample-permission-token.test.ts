@@ -1,4 +1,5 @@
 import { Spec } from '@specron/spec';
+import { getSignature } from '../helpers/signature';
 
 // Includes code from 0xcert at https://github.com/0xcert/ethereum-erc721/blob/master/src/tests/tokens/nf-token-metadata.test.ts
 
@@ -11,6 +12,7 @@ interface Data {
   owner?: string;
   bob?: string;
   jane?: string;
+  sara?: string;
   bobId1?: string;
   uri1?: string;
 }
@@ -28,6 +30,7 @@ spec.beforeEach(async (ctx) => {
   ctx.set('owner', accounts[0]);
   ctx.set('bob', accounts[1]);
   ctx.set('jane', accounts[2]);
+  ctx.set('sara', accounts[3]);
 });
 
 spec.beforeEach(async (ctx) => {
@@ -77,6 +80,35 @@ spec.test('correctly mints a NFT', async (ctx) => {
   ctx.not(logs.events.Transfer, undefined);
   const tokenURI = await nftoken.instance.methods.tokenURI(bobId1).call();
   ctx.is(tokenURI, uri1);
+});
+
+spec.test('correctly mints a NFT with signature', async (ctx) => {
+  const nftoken = ctx.get('nfToken');
+  const bob = ctx.get('bob');
+  const jane = ctx.get('jane');
+  const bobId1 = ctx.get('bobId1');
+  const uri1 = ctx.get('uri1');
+
+  const claim = await nftoken.instance.methods.getCreateClaim(bobId1, uri1).call();
+  const signature = await getSignature(ctx.web3, claim, bob);
+  
+  const logs = await nftoken.instance.methods.createWithSignature(bobId1, uri1, signature.r, signature.s, signature.v).send({ from: jane });
+  ctx.not(logs.events.Transfer, undefined);
+  const tokenURI = await nftoken.instance.methods.tokenURI(bobId1).call();
+  ctx.is(tokenURI, uri1);
+});
+
+spec.test('fails to mints a NFT with signature if signer is not the actor', async (ctx) => {
+  const nftoken = ctx.get('nfToken');
+  const sara = ctx.get('sara');
+  const jane = ctx.get('jane');
+  const bobId1 = ctx.get('bobId1');
+  const uri1 = ctx.get('uri1');
+
+  const claim = await nftoken.instance.methods.getCreateClaim(bobId1, uri1).call();
+  const signature = await getSignature(ctx.web3, claim, jane);
+  
+  await ctx.reverts(() => nftoken.instance.methods.createWithSignature(bobId1, uri1, signature.r, signature.s, signature.v).send({ from: sara }), 'Signature is not valid.');
 });
 
 spec.test('throws when person mints an unauthorized NFT ID', async (ctx) => {

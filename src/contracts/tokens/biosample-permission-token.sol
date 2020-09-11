@@ -40,12 +40,13 @@ contract BiosamplePermissionToken is
    */
   function mint(
     uint256 _tokenId,
+    address _receiverId,
     string calldata _permission
   )
     external
   {
     require(address(_tokenId) == msg.sender, "TokenIds are namespaced to permitters");
-    NFToken._mint(msg.sender, _tokenId);
+    NFToken._mint(_receiverId, _tokenId);
     NFTokenMetadata._setTokenUri(_tokenId, _permission);
     emit URI(_permission, _tokenId);
   }
@@ -77,7 +78,7 @@ contract BiosamplePermissionToken is
   )
     external
   {
-    bytes32 _claim = getCreateClaim(_tokenId, _permission);
+    bytes32 _claim = getCreateClaim(_tokenId);
     require(
       isValidSignature(
         address(_tokenId),
@@ -120,8 +121,7 @@ contract BiosamplePermissionToken is
 
   /// TODO: add description
   function getCreateClaim(
-    uint256 _tokenId,
-    string memory _permission
+    uint256 _tokenId
   )
     public
     pure
@@ -129,8 +129,7 @@ contract BiosamplePermissionToken is
   {
     return keccak256(
       abi.encodePacked(
-        _tokenId,
-        _permission
+        _tokenId
       )
     );
   }

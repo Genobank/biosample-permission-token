@@ -4,6 +4,6 @@ export async function getSignature(web3: any, claim: string, address: string) {
     r: signature.substr(0, 66),
     s: `0x${signature.substr(66, 64)}`,
     v: parseInt(`0x${signature.substr(130, 2)}`) + 27,
-    kind: 0,
+    kind: 1, // eth sign
   };
 }

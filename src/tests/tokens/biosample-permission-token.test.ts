@@ -107,7 +107,7 @@ spec.test('correctly mints a NFT with signature', async (ctx) => {
   const claim = await nftoken.instance.methods.getCreateClaim(bobId1).call();
   const signature = await getSignature(ctx.web3, claim, bob);
   
-  const logs = await nftoken.instance.methods.createWithSignature(bobId1, uri1, signature.r, signature.s, signature.v).send({ from: jane });
+  const logs = await nftoken.instance.methods.createWithSignature(bobId1, uri1, signature.r, signature.s, signature.v, signature.kind).send({ from: jane });
   ctx.not(logs.events.Transfer, undefined);
   const tokenURI = await nftoken.instance.methods.tokenURI(bobId1).call();
   ctx.is(tokenURI, uri1);
@@ -123,7 +123,7 @@ spec.test('fails to mints a NFT with signature if signer is not the actor', asyn
   const claim = await nftoken.instance.methods.getCreateClaim(bobId1).call();
   const signature = await getSignature(ctx.web3, claim, jane);
   
-  await ctx.reverts(() => nftoken.instance.methods.createWithSignature(bobId1, uri1, signature.r, signature.s, signature.v).send({ from: sara }), 'Signature is not valid.');
+  await ctx.reverts(() => nftoken.instance.methods.createWithSignature(bobId1, uri1, signature.r, signature.s, signature.v, signature.kind).send({ from: sara }), 'Signature is not valid.');
 });
 
 spec.test('throws when person mints an unauthorized NFT ID', async (ctx) => {

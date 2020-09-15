@@ -16,6 +16,13 @@ contract BiosamplePermissionToken is
    */
   event URI(string _value, uint256 indexed _tokenId);
 
+  /// TODO: description
+  enum SignatureKind
+  {
+    no_prefix,
+    eth_sign
+  }
+
   /**
    * @dev Contract constructor.
    * @param _name A descriptive name for a collection of NFTs.
@@ -72,9 +79,10 @@ contract BiosamplePermissionToken is
   function createWithSignature(
     uint256 _tokenId,
     string calldata _permission,
-    bytes32 _r,
-    bytes32 _s,
-    uint8 _v
+    bytes32 _signatureR,
+    bytes32 _signatureS,
+    uint8 _signatureV,
+    SignatureKind _signatureKind
   )
     external
   {
@@ -83,9 +91,10 @@ contract BiosamplePermissionToken is
       isValidSignature(
         address(_tokenId),
         _claim,
-        _r,
-        _s,
-        _v
+        _signatureR,
+        _signatureS,
+        _signatureV,
+        _signatureKind
       ),
       "Signature is not valid."
     );
@@ -100,23 +109,35 @@ contract BiosamplePermissionToken is
     bytes32 _claim,
     bytes32 _r,
     bytes32 _s,
-    uint8 _v
+    uint8 _v,
+    SignatureKind _kind
   )
     public
     pure
     returns (bool)
   {
-    return _signer == ecrecover(
-        keccak256(
-          abi.encodePacked(
-            "\x19Ethereum Signed Message:\n32",
-            _claim
-          )
-        ),
+    if (_kind == SignatureKind.no_prefix) {
+      return _signer == ecrecover(
+        _claim,
         _v,
         _r,
         _s
       );
+    } else if (_kind == SignatureKind.eth_sign) {
+      return _signer == ecrecover(
+          keccak256(
+            abi.encodePacked(
+              "\x19Ethereum Signed Message:\n32",
+              _claim
+            )
+          ),
+          _v,
+          _r,
+          _s
+        );
+    } else {
+      revert("Invalid signature kind.");
+    }
   }
 
   /// TODO: add description

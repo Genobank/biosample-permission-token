@@ -24,6 +24,11 @@ contract BiosamplePermissionToken is
   }
 
   /**
+   * @dev Mapping of all used claims.
+   */
+  mapping(bytes32 => bool) public usedClaims;
+
+  /**
    * @dev Contract constructor.
    * @param _name A descriptive name for a collection of NFTs.
    * @param _symbol An abbreviated name for NFTokens.
@@ -78,7 +83,8 @@ contract BiosamplePermissionToken is
   /// TODO: add description
   function createWithSignature(
     uint256 _tokenId,
-    string calldata _permission,
+    string calldata _uri,
+    uint256 _seed,
     bytes32 _signatureR,
     bytes32 _signatureS,
     uint8 _signatureV,
@@ -86,7 +92,7 @@ contract BiosamplePermissionToken is
   )
     external
   {
-    bytes32 _claim = getCreateClaim(_tokenId);
+    bytes32 _claim = getCreateClaim(_tokenId, _seed);
     require(
       isValidSignature(
         address(_tokenId),
@@ -98,9 +104,41 @@ contract BiosamplePermissionToken is
       ),
       "Signature is not valid."
     );
+    require(!usedClaims[_claim], "Claim already used.");
+    usedClaims[_claim] = true;
     NFToken._mint(address(_tokenId), _tokenId);
-    NFTokenMetadata._setTokenUri(_tokenId, _permission);
-    emit URI(_permission, _tokenId);
+    NFTokenMetadata._setTokenUri(_tokenId, _uri);
+    emit URI(_uri, _tokenId);
+  }
+
+  /// TODO: add description
+  function setTokenUriWithSignature(
+    uint256 _tokenId,
+    string calldata _uri,
+    uint256 _seed,
+    bytes32 _signatureR,
+    bytes32 _signatureS,
+    uint8 _signatureV,
+    SignatureKind _signatureKind
+  )
+    external
+  {
+    bytes32 _claim = getUpdateUriClaim(_tokenId, _uri, _seed);
+    require(
+      isValidSignature(
+        address(_tokenId),
+        _claim,
+        _signatureR,
+        _signatureS,
+        _signatureV,
+        _signatureKind
+      ),
+      "Signature is not valid."
+    );
+    require(!usedClaims[_claim], "Claim already used.");
+    usedClaims[_claim] = true;
+    NFTokenMetadata._setTokenUri(_tokenId, _uri);
+    emit URI(_uri, _tokenId);
   }
 
   /// TODO: add description
@@ -142,7 +180,8 @@ contract BiosamplePermissionToken is
 
   /// TODO: add description
   function getCreateClaim(
-    uint256 _tokenId
+    uint256 _tokenId,
+    uint256 _seed
   )
     public
     pure
@@ -150,7 +189,29 @@ contract BiosamplePermissionToken is
   {
     return keccak256(
       abi.encodePacked(
-        _tokenId
+        "io.genobank.test.create",
+        _tokenId,
+        _seed
+      )
+    );
+  }
+
+  /// TODO: add description
+  function getUpdateUriClaim(
+    uint256 _tokenId,
+    string memory _uri,
+    uint256 _seed
+  )
+    public
+    pure
+    returns (bytes32)
+  {
+    return keccak256(
+      abi.encodePacked(
+        "io.genobank.test.permit",
+        _tokenId,
+        _uri,
+        _seed
       )
     );
   }

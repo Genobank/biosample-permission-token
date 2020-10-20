@@ -16,7 +16,9 @@ contract BiosamplePermissionToken is
    */
   event URI(string _value, uint256 indexed _tokenId);
 
-  /// TODO: description
+  /**
+   * @dev Enum representing supported signature kinds.
+   */
   enum SignatureKind
   {
     no_prefix,
@@ -46,9 +48,9 @@ contract BiosamplePermissionToken is
   /// TODO: fix description
   /**
    * @dev Mints a new NFT.
-   * @param _to The address that will own the minted NFT.
    * @param _tokenId of the NFT to be minted by the msg.sender.
-   * @param _uri String representing RFC 3986 URI.
+   * @param _receiverId The address that will own the minted NFT.
+   * @param _permission String representing permission.
    */
   function mint(
     uint256 _tokenId,
@@ -66,24 +68,32 @@ contract BiosamplePermissionToken is
   /**
    * @dev Set a permission for a given NFT ID.
    * @param _tokenId Id for which we want URI.
-   * @param _uri String representing RFC 3986 URI.
+   * @param _permission String representing permission.
    */
   function setTokenUri(
     uint256 _tokenId,
-    string calldata _uri
+    string calldata _permission
   )
     external
   {
     require(address(_tokenId) == msg.sender, "TokenIds are namespaced to permitters");
-    NFTokenMetadata._setTokenUri(_tokenId, _uri);
-    emit URI(_uri, _tokenId);
+    NFTokenMetadata._setTokenUri(_tokenId, _permission);
+    emit URI(_permission, _tokenId);
   }
 
-  
-  /// TODO: add description
+  /**
+   * @dev Mints token in the name of signature provider.
+   * @param _tokenId of the NFT that will be minted.
+   * @param _permission String representing permission.
+   * @param _seed Parameter to create hash randomnes (usually timestamp).
+   * @param _signatureR Parameter R of the signature.
+   * @param _signatureS Parameter S of the signature.
+   * @param _signatureV Parameter V of the signature.
+   * @param _signatureKind Signature kind.
+   */
   function createWithSignature(
     uint256 _tokenId,
-    string calldata _uri,
+    string calldata _permission,
     uint256 _seed,
     bytes32 _signatureR,
     bytes32 _signatureS,
@@ -107,14 +117,23 @@ contract BiosamplePermissionToken is
     require(!usedClaims[_claim], "Claim already used.");
     usedClaims[_claim] = true;
     NFToken._mint(address(_tokenId), _tokenId);
-    NFTokenMetadata._setTokenUri(_tokenId, _uri);
-    emit URI(_uri, _tokenId);
+    NFTokenMetadata._setTokenUri(_tokenId, _permission);
+    emit URI(_permission, _tokenId);
   }
 
-  /// TODO: add description
+  /**
+   * @dev Set a permission for a given NFT ID in the name of signature provider.
+   * @param _tokenId of the NFT which permission will get set.
+   * @param _permission String representing permission.
+   * @param _seed Parameter to create hash randomnes (usually timestamp).
+   * @param _signatureR Parameter R of the signature.
+   * @param _signatureS Parameter S of the signature.
+   * @param _signatureV Parameter V of the signature.
+   * @param _signatureKind Signature kind.
+   */
   function setTokenUriWithSignature(
     uint256 _tokenId,
-    string calldata _uri,
+    string calldata _permission,
     uint256 _seed,
     bytes32 _signatureR,
     bytes32 _signatureS,
@@ -123,7 +142,7 @@ contract BiosamplePermissionToken is
   )
     external
   {
-    bytes32 _claim = getUpdateUriClaim(_tokenId, _uri, _seed);
+    bytes32 _claim = getUpdateUriClaim(_tokenId, _permission, _seed);
     require(
       isValidSignature(
         address(_tokenId),
@@ -137,11 +156,19 @@ contract BiosamplePermissionToken is
     );
     require(!usedClaims[_claim], "Claim already used.");
     usedClaims[_claim] = true;
-    NFTokenMetadata._setTokenUri(_tokenId, _uri);
-    emit URI(_uri, _tokenId);
+    NFTokenMetadata._setTokenUri(_tokenId, _permission);
+    emit URI(_permission, _tokenId);
   }
 
-  /// TODO: add description
+  /**
+   * @dev Cheks if signature is indeed provided by the signer.
+   * @param _signer Address of the signer.
+   * @param _claim Claim that was signed.
+   * @param _signatureR Parameter R of the signature.
+   * @param _signatureS Parameter S of the signature.
+   * @param _signatureV Parameter V of the signature.
+   * @param _signatureKind Signature kind.
+   */
   function isValidSignature(
     address _signer,
     bytes32 _claim,
@@ -178,7 +205,11 @@ contract BiosamplePermissionToken is
     }
   }
 
-  /// TODO: add description
+  /**
+   * @dev Generates claim for creating a token.
+   * @param _tokenId of the NFT we are creating.
+   * @param _seed Parameter to create hash randomnes (usually timestamp).
+   */
   function getCreateClaim(
     uint256 _tokenId,
     uint256 _seed
@@ -196,10 +227,15 @@ contract BiosamplePermissionToken is
     );
   }
 
-  /// TODO: add description
+ /**
+   * @dev Generates claim for updating a token permission.
+   * @param _tokenId of the NFT we are updating permission.
+   * @param _permission String representing permission.
+   * @param _seed Parameter to create hash randomnes (usually timestamp).
+   */
   function getUpdateUriClaim(
     uint256 _tokenId,
-    string memory _uri,
+    string memory _permission,
     uint256 _seed
   )
     public
@@ -210,7 +246,7 @@ contract BiosamplePermissionToken is
       abi.encodePacked(
         "io.genobank.test.permit",
         _tokenId,
-        _uri,
+        _permission,
         _seed
       )
     );

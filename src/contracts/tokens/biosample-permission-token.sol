@@ -60,9 +60,12 @@ contract BiosamplePermissionToken is
     external
   {
     require(address(_tokenId) == msg.sender, "TokenIds are namespaced to permitters");
-    NFToken._mint(_receiverId, _tokenId);
+    NFToken._mint(msg.sender, _tokenId);
     NFTokenMetadata._setTokenUri(_tokenId, _permission);
     emit URI(_permission, _tokenId);
+    if (msg.sender != _receiverId) {
+      NFToken._transfer(_receiverId, _tokenId);
+    }
   }
 
   /**

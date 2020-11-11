@@ -3,6 +3,7 @@
   "version": "1.0.0a",
   "description": "Non-fungible token example for tracking biosample permissions",
   "scripts": {
+    "flatten": "specron flatten",
     "compile": "specron compile",
     "sandbox": "specron sandbox",
     "prepare": "specron compile",

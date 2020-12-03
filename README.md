@@ -1,4 +1,4 @@
-# GenoBank.io biosample permission token
+# GenoBank.io Biosample Permission Token
 
 This repository contains a smart contract for storing GenoBank.io related tokens. GenoBank.io uses claims, encoded in non-fungible tokens, to establish a chain of trust for licensing and sublicensing agreements.
 

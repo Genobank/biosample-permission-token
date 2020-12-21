@@ -9,6 +9,8 @@ import "../../../node_modules/@0xcert/ethereum-erc721/src/contracts/tokens/nf-to
 contract BiosamplePermissionToken is
   NFTokenMetadata
 {
+  string namespace;
+
   /**
    * @dev MUST emit when the URI is updated for a token ID.
    * URIs are defined in RFC 3986.
@@ -37,12 +39,14 @@ contract BiosamplePermissionToken is
    */
   constructor(
     string memory _name,
-    string memory _symbol
+    string memory _symbol,
+    string memory _namespace
   )
     public
   {
     nftName = _name;
     nftSymbol = _symbol;
+    namespace = _namespace;
   }
 
   /// TODO: fix description
@@ -218,12 +222,13 @@ contract BiosamplePermissionToken is
     uint256 _seed
   )
     public
-    pure
+    view
     returns (bytes32)
   {
     return keccak256(
       abi.encodePacked(
-        "io.genobank.test.create",
+        namespace,
+        ".create",
         _tokenId,
         _seed
       )
@@ -242,12 +247,13 @@ contract BiosamplePermissionToken is
     uint256 _seed
   )
     public
-    pure
+    view
     returns (bytes32)
   {
     return keccak256(
       abi.encodePacked(
-        "io.genobank.test.permit",
+        namespace,
+        ".permit",
         _tokenId,
         _permission,
         _seed

@@ -46,7 +46,7 @@ spec.beforeEach(async (ctx) => {
   const nfToken = await ctx.deploy({ 
     src: './build/biosample-permission-token.json',
     contract: 'BiosamplePermissionToken',
-    args: ['Foo','F']
+    args: ['Foo','F', 'io.genobank.test']
   });
   ctx.set('nfToken', nfToken);
 });

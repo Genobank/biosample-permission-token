@@ -39,6 +39,6 @@ spec.beforeEach(async (ctx) => {
 spec.test('Emits event', async (ctx) => {
   const emitter = ctx.get('emitter');
   const owner = ctx.get('owner');
-  const logs = await emitter.instance.methods.emitClaim('Test').send({ from: owner });
-  ctx.not(logs.events.Claim, undefined);
+  const logs = await emitter.instance.methods.emitProof('Test').send({ from: owner });
+  ctx.not(logs.events.Proof, undefined);
 });

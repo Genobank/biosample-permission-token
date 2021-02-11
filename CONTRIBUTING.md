@@ -16,6 +16,11 @@ A developer should also use his own Ethereum wallet address and a local database
 * Compile and deploy the contract (set name and symbol parameters).
 * Use the returned smart contract address.
 
+## Running tests
+
+* Run `npm test`.
+* For linter run: `npm run solhint`.
+
 ## Coding style
 
 We follow the 0xcert style guide [here](https://github.com/0xcert/solidity-style-guide).

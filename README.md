@@ -3,6 +3,7 @@
 This repository contains a smart contract for storing GenoBank.io related tokens. GenoBank.io uses claims, encoded in non-fungible tokens, to establish a chain of trust for licensing and sublicensing agreements.
 
 See video explanation of the technology at: https://www.youtube.com/watch?v=su5eWYnRN24
+See explanation article of the smart contract at: https://genobank.io/biosample-permission-token-with-non-fungible-tokens.html
 
 | Resource | Description
 |-|-

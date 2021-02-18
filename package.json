@@ -36,7 +36,7 @@
       "ts-node/register"
     ]
   },
-  "author": "William Entriken",
+  "author": "William Entriken & Tadej Vengust",
   "license": "SEE LICENSE IN LICENSE",
   "repository": {
     "type": "git",

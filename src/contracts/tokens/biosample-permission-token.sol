@@ -36,6 +36,7 @@ contract BiosamplePermissionToken is
    * @dev Contract constructor.
    * @param _name A descriptive name for a collection of NFTs.
    * @param _symbol An abbreviated name for NFTokens.
+   * @param _namespace Namespace for signature.
    */
   constructor(
     string memory _name,

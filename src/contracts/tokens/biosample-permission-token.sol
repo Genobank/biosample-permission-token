@@ -2,7 +2,6 @@ pragma solidity 0.6.2;
 
 import "../../../node_modules/@0xcert/ethereum-erc721/src/contracts/tokens/nf-token-metadata.sol";
 
-
 /**
  * @dev This is an example contract implementation of NFToken with metadata extension.
  */
@@ -163,7 +162,6 @@ contract BiosamplePermissionToken is
     namespace = _namespace;
   }
 
-  /// TODO: fix description
   /**
    * @dev Mints a new NFT.
    * @param _tokenId of the NFT to be minted by the msg.sender.

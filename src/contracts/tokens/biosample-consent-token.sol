@@ -3,11 +3,13 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract BiosampleConsentToken is ERC721, Ownable {
     using Counters for Counters.Counter;
+    using SafeERC20 for IERC20; 
 
     IERC20 public rewardToken;
     Counters.Counter private _tokenIds;
@@ -23,13 +25,32 @@ contract BiosampleConsentToken is ERC721, Ownable {
         bool rewardClaimed;
     }
 
- function giveConsent(uint256 studyId, uint256 duration, uint256 rewardAmount) external {
+    enum SignatureKind
+    {
+        no_prefix,
+        eth_sign
+    }
+    mapping(uint256 => Consent) public consents;
+    mapping(uint256 => mapping(address => bool)) public studyParticipants;
+    mapping(uint256 => string) private _tokenURIs;
+    mapping(bytes32 => bool) private usedClaims;
+
+    event ConsentGiven(uint256 tokenId, uint256 studyId, uint256 duration);
+    event ConsentRevoked(uint256 tokenId, uint256 studyId);
+    event TokenLocked(uint256 tokenId, address locker);
+    event TokenUnlocked(uint256 tokenId);
+    event RewardClaimed(uint256 tokenId, uint256 studyId, uint256 rewardAmount);
+    event URI(string value, uint256 indexed id);
+
+    constructor(string memory name, string memory symbol) ERC721(name, symbol) {
+
+    }
+
+    function giveConsent(uint256 studyId, uint256 duration, uint256 rewardAmount) external {
         require(!studyParticipants[studyId][msg.sender], "Already participating in this study");
-        
         _tokenIds.increment();
         uint256 newTokenId = _tokenIds.current();
         _safeMint(msg.sender, newTokenId);
-
         consents[newTokenId] = Consent({
             studyId: studyId,
             startTime: block.timestamp,
@@ -39,7 +60,6 @@ contract BiosampleConsentToken is ERC721, Ownable {
             isLocked: false,
             rewardClaimed: false
         });
-
         studyParticipants[studyId][msg.sender] = true;
         emit ConsentGiven(newTokenId, studyId, duration);
     }
@@ -47,32 +67,26 @@ contract BiosampleConsentToken is ERC721, Ownable {
     function revokeConsent(uint256 tokenId) external {
         require(ownerOf(tokenId) == msg.sender, "Not the token owner");
         require(!consents[tokenId].isLocked, "Token is locked");
-
         uint256 studyId = consents[tokenId].studyId;
         studyParticipants[studyId][msg.sender] = false;
-        
         _burn(tokenId);
         delete consents[tokenId];
-
         emit ConsentRevoked(tokenId, studyId);
     }
 
     function lock(uint256 tokenId) external {
         require(ownerOf(tokenId) == msg.sender, "Not the token owner");
         require(!consents[tokenId].isLocked, "Token is already locked");
-
         consents[tokenId].isLocked = true;
         consents[tokenId].locker = msg.sender;
-
         emit TokenLocked(tokenId, msg.sender);
     }
- function unlock(uint256 tokenId) external {
+
+    function unlock(uint256 tokenId) external {
         require(consents[tokenId].locker == msg.sender, "Not the locker");
         require(consents[tokenId].isLocked, "Token is not locked");
-
         consents[tokenId].isLocked = false;
         consents[tokenId].locker = address(0);
-
         emit TokenUnlocked(tokenId);
     }
 
@@ -80,23 +94,18 @@ contract BiosampleConsentToken is ERC721, Ownable {
         require(ownerOf(tokenId) == msg.sender, "Not the token owner");
         require(!consents[tokenId].rewardClaimed, "Reward already claimed");
         require(block.timestamp >= consents[tokenId].startTime + consents[tokenId].duration, "Study duration not completed");
-
         consents[tokenId].rewardClaimed = true;
         uint256 rewardAmount = consents[tokenId].rewardAmount;
-
-        require(rewardToken.transfer(msg.sender, rewardAmount), "Reward transfer failed");
-
+        rewardToken.safeTransfer(msg.sender, rewardAmount);  // Uso correcto de safeTransfer
         emit RewardClaimed(tokenId, consents[tokenId].studyId, rewardAmount);
     }
 
     function transferAndLock(uint256 tokenId, address to) external {
         require(ownerOf(tokenId) == msg.sender, "Not the token owner");
         require(!consents[tokenId].isLocked, "Token is already locked");
-
         _transfer(msg.sender, to, tokenId);
         consents[tokenId].isLocked = true;
         consents[tokenId].locker = to;
-
         emit TokenLocked(tokenId, to);
     }
 
@@ -200,7 +209,8 @@ contract BiosampleConsentToken is ERC721, Ownable {
     function getUpdateUriClaim(uint256 _tokenId, string memory _permission, uint256 _seed) public view returns (bytes32) {
         return keccak256(abi.encodePacked(namespace, ".permit", _tokenId, _permission, _seed));
     }
- function _setTokenUri(uint256 tokenId, string memory _tokenURI) internal virtual {
+    
+    function _setTokenUri(uint256 tokenId, string memory _tokenURI) internal virtual {
         require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
         _tokenURIs[tokenId] = _tokenURI;
     }

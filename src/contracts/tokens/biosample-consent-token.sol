@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -15,80 +15,132 @@ contract BiosampleConsentToken is ERC721, Ownable {
     Counters.Counter private _tokenIds;
     string public namespace;
 
+    address public executorWallet;
+
     struct Consent {
         uint256 studyId;
+        uint256 tokenId;
         uint256 startTime;
         uint256 duration;
         uint256 rewardAmount;
+        address originalOwner;
         address locker;
         bool isLocked;
         bool rewardClaimed;
     }
 
-    enum SignatureKind
-    {
-        no_prefix,
-        eth_sign
-    }
     mapping(uint256 => Consent) public consents;
     mapping(uint256 => mapping(address => bool)) public studyParticipants;
     mapping(uint256 => string) private _tokenURIs;
     mapping(bytes32 => bool) private usedClaims;
+    mapping(uint256 => uint256) public burnSchedule;
 
     event ConsentGiven(uint256 tokenId, uint256 studyId, uint256 duration);
     event ConsentRevoked(uint256 tokenId, uint256 studyId);
     event TokenLocked(uint256 tokenId, address locker);
     event TokenUnlocked(uint256 tokenId);
     event RewardClaimed(uint256 tokenId, uint256 studyId, uint256 rewardAmount);
+    event TokenScheduledForBurn(uint256 tokenId, uint256 burnTime);
     event URI(string value, uint256 indexed id);
 
-    constructor(string memory name, string memory symbol) ERC721(name, symbol) {
-
+    constructor(address rewardTokenAddress) ERC721("Biosample Consent Token", "BCT") {
+        executorWallet = msg.sender;
+        rewardToken = IERC20(rewardTokenAddress);
     }
 
-    function giveConsent(uint256 studyId, uint256 duration, uint256 rewardAmount) external {
-        require(!studyParticipants[studyId][msg.sender], "Already participating in this study");
+    modifier onlyOwnerOrExecutor(uint256 tokenId) {
+        require(ownerOf(tokenId) == msg.sender || executorWallet == msg.sender, "Not authorized");
+        _;
+    }
+
+    function giveConsent(
+        uint256 studyId, 
+        uint256 duration, 
+        uint256 rewardAmount, 
+        address from,
+        address _to
+    ) external returns (Consent memory) {
+        if (msg.sender != executorWallet) {
+            from = msg.sender;
+        }
+        require(!studyParticipants[studyId][_to], "Already participating in this study");
+        
+        // Si la duración es 0, se asigna 1 año (en segundos)
+        if (duration == 0) {
+            duration = 365 * 24 * 60 * 60; // 1 año en segundos
+        }
+
         _tokenIds.increment();
         uint256 newTokenId = _tokenIds.current();
-        _safeMint(msg.sender, newTokenId);
-        consents[newTokenId] = Consent({
+        _safeMint(from, newTokenId);
+        _transfer(from, _to, newTokenId);
+
+        // Crear y almacenar la metadata del consentimiento
+        Consent memory newConsent = Consent({
             studyId: studyId,
+            tokenId: newTokenId,
             startTime: block.timestamp,
             duration: duration,
             rewardAmount: rewardAmount,
-            locker: address(0),
-            isLocked: false,
+            originalOwner: from,
+            locker: _to,
+            isLocked: true,
             rewardClaimed: false
         });
-        studyParticipants[studyId][msg.sender] = true;
+
+        consents[newTokenId] = newConsent;
+        studyParticipants[studyId][_to] = true;
+        uint256 burnTime = block.timestamp + duration;
+        burnSchedule[newTokenId] = burnTime;
+
         emit ConsentGiven(newTokenId, studyId, duration);
+        emit TokenLocked(newTokenId, _to);
+
+        // Retornar la metadata creada
+        return newConsent;
     }
 
-    function revokeConsent(uint256 tokenId) external {
-        require(ownerOf(tokenId) == msg.sender, "Not the token owner");
-        require(!consents[tokenId].isLocked, "Token is locked");
-        uint256 studyId = consents[tokenId].studyId;
-        studyParticipants[studyId][msg.sender] = false;
+
+
+    function revokeConsent(uint256 tokenId, address owner) external {
+        if (msg.sender != executorWallet) {
+            owner = msg.sender;
+        }
+        require(ownerOf(tokenId) == owner, "Not the token owner");
+        Consent memory consent = consents[tokenId];
+        require(consent.isLocked, "Token is not locked");
+        unlock(tokenId);
         _burn(tokenId);
+        delete studyParticipants[consent.studyId][owner];
+        delete burnSchedule[tokenId];
         delete consents[tokenId];
-        emit ConsentRevoked(tokenId, studyId);
+        emit ConsentRevoked(tokenId, consent.studyId);
+    }
+
+
+
+    function _transfer(address from, address to, uint256 tokenId) internal override {
+        require(!consents[tokenId].isLocked, "Token is rented and cannot be transferred");
+        super._transfer(from, to, tokenId);
     }
 
     function lock(uint256 tokenId) external {
-        require(ownerOf(tokenId) == msg.sender, "Not the token owner");
+        require(ownerOf(tokenId) == msg.sender || msg.sender == executorWallet, "Not authorized to lock");
         require(!consents[tokenId].isLocked, "Token is already locked");
         consents[tokenId].isLocked = true;
         consents[tokenId].locker = msg.sender;
         emit TokenLocked(tokenId, msg.sender);
     }
 
-    function unlock(uint256 tokenId) external {
-        require(consents[tokenId].locker == msg.sender, "Not the locker");
+
+    function unlock(uint256 tokenId) public {
+        require(consents[tokenId].locker == msg.sender || msg.sender == executorWallet, "Not the locker");
         require(consents[tokenId].isLocked, "Token is not locked");
         consents[tokenId].isLocked = false;
         consents[tokenId].locker = address(0);
         emit TokenUnlocked(tokenId);
     }
+
 
     function claimReward(uint256 tokenId) external {
         require(ownerOf(tokenId) == msg.sender, "Not the token owner");
@@ -119,107 +171,6 @@ contract BiosampleConsentToken is ERC721, Ownable {
         }
     }
 
-    function setTokenUri(uint256 _tokenId, string calldata _permission) external {
-        require(address(uint160(_tokenId)) == msg.sender, "TokenIds are namespaced to permitters");
-        _setTokenUri(_tokenId, _permission);
-        emit URI(_permission, _tokenId);
-    }
-
-    function createWithSignature(
-        uint256 _tokenId,
-        string memory _permission,
-        uint256 _seed,
-        bytes32 _signatureR,
-        bytes32 _signatureS,
-        uint8 _signatureV,
-        SignatureKind _signatureKind
-    ) public {
-        bytes32 _claim = getCreateClaim(_tokenId, _seed);
-        require(
-            isValidSignature(
-                address(uint160(_tokenId)),
-                _claim,
-                _signatureR,
-                _signatureS,
-                _signatureV,
-                _signatureKind
-            ),
-            "Signature is not valid."
-        );
-        require(!usedClaims[_claim], "Claim already used.");
-        usedClaims[_claim] = true;
-        _safeMint(address(uint160(_tokenId)), _tokenId);
-        _setTokenUri(_tokenId, _permission);
-        emit URI(_permission, _tokenId);
-    }
-
-    function setTokenUriWithSignature(
-        uint256 _tokenId,
-        string calldata _permission,
-        uint256 _seed,
-        bytes32 _signatureR,
-        bytes32 _signatureS,
-        uint8 _signatureV,
-        SignatureKind _signatureKind
-    ) external {
-        bytes32 _claim = getUpdateUriClaim(_tokenId, _permission, _seed);
-        require(
-            isValidSignature(
-                address(uint160(_tokenId)),
-                _claim,
-                _signatureR,
-                _signatureS,
-                _signatureV,
-                _signatureKind
-            ),
-            "Signature is not valid."
-        );
-        require(!usedClaims[_claim], "Claim already used.");
-        usedClaims[_claim] = true;
-        _setTokenUri(_tokenId, _permission);
-        emit URI(_permission, _tokenId);
-    }
-
-    function isValidSignature(
-        address _signer,
-        bytes32 _claim,
-        bytes32 _r,
-        bytes32 _s,
-        uint8 _v,
-        SignatureKind _kind
-    ) public pure returns (bool) {
-        if (_kind == SignatureKind.no_prefix) {
-            return _signer == ecrecover(_claim, _v, _r, _s);
-        } else if (_kind == SignatureKind.eth_sign) {
-            return _signer == ecrecover(
-                keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _claim)),
-                _v,
-                _r,
-                _s
-            );
-        } else {
-            revert("Invalid signature kind.");
-        }
-    }
-
-    function getCreateClaim(uint256 _tokenId, uint256 _seed) public view returns (bytes32) {
-        return keccak256(abi.encodePacked(namespace, ".create", _tokenId, _seed));
-    }
-
-    function getUpdateUriClaim(uint256 _tokenId, string memory _permission, uint256 _seed) public view returns (bytes32) {
-        return keccak256(abi.encodePacked(namespace, ".permit", _tokenId, _permission, _seed));
-    }
-    
-    function _setTokenUri(uint256 tokenId, string memory _tokenURI) internal virtual {
-        require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
-        _tokenURIs[tokenId] = _tokenURI;
-    }
-
-    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
-        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
-        return _tokenURIs[tokenId];
-    }
-
     function extendConsentDuration(uint256 tokenId, uint256 additionalDuration) external {
         require(ownerOf(tokenId) == msg.sender, "Not the token owner");
         consents[tokenId].duration += additionalDuration;
@@ -235,6 +186,11 @@ contract BiosampleConsentToken is ERC721, Ownable {
 
     function setRewardToken(address newRewardToken) external onlyOwner {
         rewardToken = IERC20(newRewardToken);
+    }
+
+    function _setTokenUri(uint256 tokenId, string memory _tokenURI) internal virtual {
+        require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
+        _tokenURIs[tokenId] = _tokenURI;
     }
 
     function withdrawUnclaimedRewards() external onlyOwner {

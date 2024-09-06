@@ -43,7 +43,7 @@ contract BiosampleConsentToken is ERC721, Ownable {
     event TokenScheduledForBurn(uint256 tokenId, uint256 burnTime);
     event URI(string value, uint256 indexed id);
 
-    constructor(address rewardTokenAddress) ERC721("Biosample Consent Token", "BCT") {
+    constructor(address rewardTokenAddress) ERC721("Biosample Consent Token", "BCT") Ownable(msg.sender) {
         executorWallet = msg.sender;
         rewardToken = IERC20(rewardTokenAddress);
     }
@@ -65,7 +65,6 @@ contract BiosampleConsentToken is ERC721, Ownable {
         }
         require(!studyParticipants[studyId][_to], "Already participating in this study");
         
-        // Si la duración es 0, se asigna 1 año (en segundos)
         if (duration == 0) {
             duration = 365 * 24 * 60 * 60; // 1 año en segundos
         }
@@ -75,7 +74,6 @@ contract BiosampleConsentToken is ERC721, Ownable {
         _safeMint(from, newTokenId);
         _transfer(from, _to, newTokenId);
 
-        // Crear y almacenar la metadata del consentimiento
         Consent memory newConsent = Consent({
             studyId: studyId,
             tokenId: newTokenId,
@@ -96,11 +94,8 @@ contract BiosampleConsentToken is ERC721, Ownable {
         emit ConsentGiven(newTokenId, studyId, duration);
         emit TokenLocked(newTokenId, _to);
 
-        // Retornar la metadata creada
         return newConsent;
     }
-
-
 
     function revokeConsent(uint256 tokenId, address owner) external {
         if (msg.sender != executorWallet) {
@@ -117,13 +112,6 @@ contract BiosampleConsentToken is ERC721, Ownable {
         emit ConsentRevoked(tokenId, consent.studyId);
     }
 
-
-
-    function _transfer(address from, address to, uint256 tokenId) internal override {
-        require(!consents[tokenId].isLocked, "Token is rented and cannot be transferred");
-        super._transfer(from, to, tokenId);
-    }
-
     function lock(uint256 tokenId) external {
         require(ownerOf(tokenId) == msg.sender || msg.sender == executorWallet, "Not authorized to lock");
         require(!consents[tokenId].isLocked, "Token is already locked");
@@ -131,7 +119,6 @@ contract BiosampleConsentToken is ERC721, Ownable {
         consents[tokenId].locker = msg.sender;
         emit TokenLocked(tokenId, msg.sender);
     }
-
 
     function unlock(uint256 tokenId) public {
         require(consents[tokenId].locker == msg.sender || msg.sender == executorWallet, "Not the locker");
@@ -141,14 +128,13 @@ contract BiosampleConsentToken is ERC721, Ownable {
         emit TokenUnlocked(tokenId);
     }
 
-
     function claimReward(uint256 tokenId) external {
         require(ownerOf(tokenId) == msg.sender, "Not the token owner");
         require(!consents[tokenId].rewardClaimed, "Reward already claimed");
         require(block.timestamp >= consents[tokenId].startTime + consents[tokenId].duration, "Study duration not completed");
         consents[tokenId].rewardClaimed = true;
         uint256 rewardAmount = consents[tokenId].rewardAmount;
-        rewardToken.safeTransfer(msg.sender, rewardAmount);  // Uso correcto de safeTransfer
+        rewardToken.safeTransfer(msg.sender, rewardAmount);
         emit RewardClaimed(tokenId, consents[tokenId].studyId, rewardAmount);
     }
 
@@ -189,7 +175,7 @@ contract BiosampleConsentToken is ERC721, Ownable {
     }
 
     function _setTokenUri(uint256 tokenId, string memory _tokenURI) internal virtual {
-        require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
+        _requireOwned(tokenId);
         _tokenURIs[tokenId] = _tokenURI;
     }
 
@@ -198,4 +184,3 @@ contract BiosampleConsentToken is ERC721, Ownable {
         require(rewardToken.transfer(owner(), balance), "Withdrawal failed");
     }
 }
-

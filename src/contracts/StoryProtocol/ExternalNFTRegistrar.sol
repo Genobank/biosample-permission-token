@@ -4,7 +4,8 @@ pragma solidity ^0.8.26;
 import { IPAssetRegistry } from "https://github.com/storyprotocol/protocol-core-v1/blob/main/contracts/registries/IPAssetRegistry.sol";
 
 contract ExternalNFTRegistrar {
-    IPAssetRegistry public immutable IP_ASSET_REGISTRY;
+    IPAssetRegistry public immutable IP_ASSET_REGISTRY = IPAssetRegistry(0x28E59E91C0467e89fd0f0438D47Ca839cDfEc095);
+
 
     event NFTRegistered(
         uint256 indexed chainId,
@@ -12,10 +13,6 @@ contract ExternalNFTRegistrar {
         uint256 tokenId,
         address ipId
     );
-
-    constructor(address ipAssetRegistryAddress) {
-        IP_ASSET_REGISTRY = IPAssetRegistry(ipAssetRegistryAddress);
-    }
 
     function registerExternalNFT(
         uint256 chainId,

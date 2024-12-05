@@ -7,7 +7,6 @@ import { IRoyaltyWorkflows } from "https://github.com/storyprotocol/protocol-per
 contract ExtendedRoyaltyManager {
     IRoyaltyWorkflows public immutable ROYALTY_WORKFLOWS;
 
-    // Constructor que inicializa la dirección del contrato de RoyaltyWorkflows
     constructor(address royaltyWorkflowsAddress) {
         ROYALTY_WORKFLOWS = IRoyaltyWorkflows(royaltyWorkflowsAddress);
     }

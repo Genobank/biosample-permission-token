@@ -47,5 +47,6 @@ contract LicenseRegistrar {
 
         licenseTermsId = PIL_TEMPLATE.registerLicenseTerms(pilTerms);
         emit LicenseTermsRegistered(licenseTermsId, msg.sender);
+        return licenseTermsId;
     }
 }

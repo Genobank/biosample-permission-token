@@ -13,13 +13,13 @@
     "compiler": {
       "build": "./build",
       "match": [
-        "./src/**/*.sol"
+        "./src/contracts/tokens/biosample-permission-token.sol"
       ]
     },
     "flattener": {
       "build": "./build",
       "match": [
-        "./src/**/*.sol"
+        "./src/contracts/tokens/biosample-permission-token.sol"
       ],
       "severities": [
         "error",

@@ -1,1 +1,36 @@
-Copyright 2020 GenoBank.io. All rights reserved.
+GNU AFFERO GENERAL PUBLIC LICENSE
+Version 3, 19 November 2007
+
+Copyright (C) 2020-2026 GenoBank.io
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+ADDITIONAL TERMS:
+
+1. Network Use Clause: If you run a modified version of this software
+   as a service accessible over a network, you MUST make the complete
+   source code of your modified version available to users of that service.
+
+2. Attribution Required: Any use, distribution, or derivative work must
+   prominently display "Powered by GenoBank.io" with a link to
+   https://genobank.io
+
+3. No Trademark License: This license does not grant permission to use
+   the trade names, trademarks, service marks, or product names of
+   GenoBank.io, except as required for reasonable attribution.
+
+For commercial licensing options without these restrictions, contact:
+daniel@genobank.io
+
+Full AGPL-3.0 text: https://www.gnu.org/licenses/agpl-3.0.txt
